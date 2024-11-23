@@ -12,3 +12,12 @@ I also use NAAO public weather data, moon cycle calculations, and dark sky calcu
 
 This may not be the most efficient method of accomplishing this task and so, in the StargazingV2 repo, I have a second version which does the above in one Python script, without the use of SQL. 
 
+FURTHER DETAILS:
+
+To me, the most important factors are:
+  1. How dark is the sky?
+  2. How cloudy is the sky?
+  3. What phase is the moon in?
+
+And thus, my ratings are heavily weighted towards these factors.
+      
