@@ -12,6 +12,8 @@ I also use NAAO public weather data, moon cycle calculations, and dark sky calcu
 
 This may not be the most efficient method of accomplishing this task and so, in the StargazingV2 repo, I have a second version which does the above in one Python script, without the use of SQL. 
 
+Here, in StargazingV1, I use an API call to collect the required data. In StargazingV2, I use a webscraping package for simplicity and reusability.
+
 For general use, the StargazingV2 script is best.
 
 **FURTHER DETAILS**
