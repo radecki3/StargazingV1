@@ -6,6 +6,9 @@ As someone who likes to stargaze, I wanted to create some easy-to-use tools for 
 
 METHODS:
 
-Here, I use a combination of Python and SQL to return a rating, as well as some supplemental information, regarding stargazing potential on a given night given a particular location. 
+Here, I use a combination of Python and SQL to return a rating, as well as some supplemental information, regarding stargazing potential on a given night given a particular location in the United States. 
 
-This may not be the most efficient method of accomplishing this task and so, in the StargazingV2 repo, I have a second version which does the above in one Python script. 
+I also use NAAO public weather data, moon cycle calculations, and dark sky calculations to accomplish this. 
+
+This may not be the most efficient method of accomplishing this task and so, in the StargazingV2 repo, I have a second version which does the above in one Python script, without the use of SQL. 
+
