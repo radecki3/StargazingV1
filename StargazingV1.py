@@ -1,5 +1,9 @@
 import requests
+import datetime
+import ephem
 from geopy.geocoders import Nominatim
+from skyfield.api import load
+import skyfield.almanac as almanac
 
 #Convert User Input Location to longitude, latitude
 def convert_location(loc):
@@ -55,12 +59,40 @@ def get_weather(lat,long):
             weather_rating = "bad"
         else:
             weather_rating = "good"
-
     return short_forecast, weather_rating, night_temp
 
 #Get Moon Phase
-def moon_phase():
-    return
+def get_moon_phase():
+    #today's date
+    current_date = datetime.date.today()
+    #moon illumination, with some error tolerance
+    illumination = ephem.Moon(current_date).phase
+    if illumination >=98:
+        moon_phase = "Full Moon"
+        moon_phase_rating = "Bad"
+    elif illumination <=2:
+        moon_phase = "New Moon"
+        moon_phase_rating = "Great"
+    else: #need this other package to distinguish phases
+        eph = load('de421.bsp') #JPL moon phase catalog
+        moon = eph['moon']
+        ts = load.timescale()
+        current_time = ts.utc(current_date)
+        phase_deg = (almanac.moon_phase(eph,current_time)).degrees #returns in deg
+        if (0 <= phase_deg <= 90):
+            moon_phase = "Waxing Crescent"
+            moon_phase_rating = "Pretty Good"
+        if (90 <= phase_deg <=180):
+            moon_phase = "Waxing Gibbous"
+            moon_phase_rating = "Not Good"
+        if (180 <= phase_deg <=270):
+            moon_phase = "Waning Gibbous"
+            moon_phase_rating = "Not Good"
+        if (270 <= phase_deg <= 360):
+            moon_phase = "Waning Crescent"
+            moon_phase_rating = "Pretty Good"
+    #for me, if it's a new moon that's great, crescent is stil okay, gibbous is pretty bad, full moon is very bad
+    return moon_phase, moon_phase_rating, illumination
 
 #Combine
 def calculate_rating():
@@ -78,23 +110,29 @@ def main():
     try:
         latitude, longitude = convert_location(location)
         forecast, weather_rating, night_temp = get_weather(latitude,longitude)
+        moon_phase, moon_phase_rating, illumination = get_moon_phase()
         if weather_rating == "good":
-            color = "\033[92m" #green
+            weather_color = "\033[92m" #green
         else:
-            color = "\033[91m" #red
+            weather_color = "\033[91m" #red
+        if moon_phase_rating == "Great":
+            moon_color = "\033[92m" 
+        elif moon_phase_rating == "Pretty Good":
+            moon_color = "\033[92m" 
+        else:
+            moon_color = "\033[91m"
         bold = "\033[1m"
         end = "\033[0m"
-        moon_rating,phase = 'good',1
         overall_rating = 'good'
-        print(f"{bold}Weather Rating: {end}{weather_rating.upper()} (Forecast: {forecast}, Temp: {night_temp} F)")
-        print(f"{bold}Moon Rating: {end}{moon_rating.upper()} (Phase: {phase})")
+        print(f"{bold}Weather Rating: {end} {weather_color}{weather_rating.upper()}{end} (Forecast: {forecast}, Temp: {night_temp} F)")
+        print(f"{bold}Moon Rating: {end} {moon_color}{moon_phase_rating.upper()}{end} (Phase: {moon_phase}, {illumination:.2f}% Illuminated)")
         print(f"{bold}Overall Rating: {end}{overall_rating.upper()}")
         if (night_temp >=50) & (overall_rating == "good"): 
             print("Tonight's a great night to stargaze!")
         elif (night_temp <50) & (overall_rating == "good"):
             print("Tonight's a great night to stargaze! Make sure to bring a Jacket!")
         else:
-            print("Maybe try again tomorrow!")
+            print("Try again tomorrow!")
     except Exception as error:
         print(f"There was an error: {error}")
         
