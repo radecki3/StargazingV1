@@ -6,15 +6,15 @@ As someone who likes to stargaze, I wanted to create some easy-to-use tools for 
 
 **METHODS**
 
-Here, I use a combination of Python and SQL to return a rating, as well as some supplemental information, regarding stargazing potential on a given night given a particular location in the United States. 
+Here, I use Python to return a rating, as well as some supplemental information, regarding stargazing potential on a given night given a particular location in the United States. 
 
-I also use NAAO public weather data, moon cycle calculations, and dark sky calculations to accomplish this. 
+I also use location calculations, NWS public weather data, and moon cycle calculations to accomplish this.
 
-This may not be the most efficient method of accomplishing this task and so, in the StargazingV2 repo, I have a second version which does the above in one Python script, without the use of SQL. 
+Here, in StargazingV1, I use an API call to collect the required data, as well as a few packages.
 
-Here, in StargazingV1, I use an API call to collect the required data. In StargazingV2, I use a webscraping package for simplicity and reusability.
+StargazingV1 is relatively basic. I only look at 12 hour increments for weather, and some of my criteria is biased towards what I believe is good for stargazing.
 
-For general use, the StargazingV2 script is best.
+In future versions, I hope to return a more comprehensive evaluation of stargazing quality, perhaps using some weather models.
 
 **FURTHER DETAILS**
 
