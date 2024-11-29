@@ -1,13 +1,13 @@
 import requests
 import datetime
 import ephem
+import skyfield.almanac as almanac
 from geopy.geocoders import Nominatim
 from skyfield.api import load
-import skyfield.almanac as almanac
 
 #Convert User Input Location to longitude, latitude
 def convert_location(loc):
-    geolocator = Nominatim(user_agent="Stargazing")
+    geolocator = Nominatim(user_agent='Stargazing')
     #location
     location = geolocator.geocode(loc)
     lat = location.latitude
