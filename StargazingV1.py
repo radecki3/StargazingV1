@@ -1,11 +1,17 @@
+import warnings
 import requests
 import datetime
 import ephem
 import time
 import skyfield.almanac as almanac
+import pandas as pd
+from skyfield.data import hipparcos
 from geopy.geocoders import Nominatim
 from skyfield.api import load
 from rich.progress import track
+from astropy.coordinates import AltAz
+from astropy.coordinates import EarthLocation, SkyCoord
+from astropy.time import Time
 
 #Convert User Input Location to longitude, latitude
 def convert_location(loc):
@@ -21,6 +27,8 @@ def convert_location(loc):
 
 #Get Weather Data from NWS
 def get_weather(lat,long):
+    #there's a depreciation warning that is annoying
+    warnings.simplefilter(action='ignore',category=FutureWarning)
     #have to first fetch grid points
     grid_url = f"https://api.weather.gov/points/{lat},{long}"
     #NWS does not use API keys
@@ -112,9 +120,57 @@ def calculate_rating(illum, temp, weather_rating):
     elif 50 < illum <= 70:
         dummy_rating +=1.0
     rating = dummy_rating
-    rating_text = "bad"
     rating_text = "great" if rating >=9 else "pretty good" if 7< rating <10 else "pretty bad" if 4< rating <7 else "bad"
     return rating, rating_text
+
+#Find Cool Objects
+#use the hipparcos dataset
+def visible_objects(lat,long):
+    with load.open(hipparcos.URL) as f:
+        df = hipparcos.load_dataframe(f)
+    brightest_stars = df[df.magnitude < 1.0].sort_values('magnitude').reset_index() #magniutdes are in reverse order of brightness
+    brightest_stars = brightest_stars[['hip','magnitude','ra_degrees','dec_degrees']]
+    #get common names of brightest stars, this is from a separate catalog
+    #https://www.celestialprogramming.com/snippets/StarCommonNamesWithHipRADecMag.json
+    name_references = pd.read_json('StarCommonNamesWithHipRADecMag.json')
+    common_names = pd.DataFrame({"name": name_references[0][1:],"hip": name_references[1][1:]})
+    #assigns names to brightest stars
+    stars_names = pd.merge(brightest_stars,common_names,on="hip",how="inner")
+    #get altitude and azimuth
+    date_today = datetime.date.today()
+    date_tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+    night_time_start = Time(f'{date_today} 18:00:00')
+    night_time_end = Time(f'{date_tomorrow} 06:00:00')
+    location = EarthLocation(lat=lat,lon=long)
+    altaz_converter_start = AltAz(location=location,obstime=night_time_start)
+    altaz_converter_end = AltAz(location=location,obstime=night_time_end)
+    #loop over dataframe and convert stars positions to alt az
+    star_alt_start = []
+    star_alt_end = []
+    for idx, star in stars_names.iterrows():
+        star_ra = star['ra_degrees']
+        star_dec = star['dec_degrees']
+        star_coord = SkyCoord(f'{star_ra}',f'{star_dec}',unit='deg')
+        star_coord_start = star_coord.transform_to(altaz_converter_start)
+        star_coord_end = star_coord.transform_to(altaz_converter_end)
+        star_alt_start.append(star_coord_start.alt.degree)
+        star_alt_end.append(star_coord_end.alt.degree)
+    stars_names["altitude_start"] = star_alt_start
+    stars_names["altitude_end"] = star_alt_end
+    #check if stars are visible
+    visibilities = []
+    for row in stars_names.iterrows():
+        altitude_start = row[1][5]
+        altitude_end = row[1][6]
+        if (altitude_start > 0) | (altitude_end > 0):
+            visibilities.append('visible')
+        else:
+            visibilities.append('not visible')
+    stars_names["visible?"] = visibilities
+    #get rid of the not visible ones
+    final_star_catalog = stars_names[stars_names["visible?"]=='visible']
+    bright_visible_objects = final_star_catalog.head(5)['name'].tolist() #only need a few  
+    return bright_visible_objects
 
 #user input
 welcome_message = """
@@ -129,7 +185,8 @@ def main():
         latitude, longitude = convert_location(location)
         forecast, weather_rating, night_temp = get_weather(latitude,longitude)
         moon_phase, moon_phase_rating, illumination = get_moon_phase()
-        overall_rating_number,overall_rating_text = calculate_rating(illumination,night_temp,weather_rating)
+        overall_rating_number, overall_rating_text = calculate_rating(illumination,night_temp,weather_rating)
+        visible_list = visible_objects(latitude,longitude)
         #pretty text styling
         if weather_rating == "good":
             weather_color = "\033[92m" #green
@@ -141,9 +198,10 @@ def main():
             moon_color = "\033[92m" 
         else:
             moon_color = "\033[91m"
-        if overall_rating_text == ("Great") or ("Pretty Good"):
+        if overall_rating_text == ("great") or ("pretty good"):
             overall_color = "\033[92m"
-        else:
+        #some weird stuff going on here, will have to fix.
+        if overall_rating_text == ("bad") or ("pretty bad"):
             overall_color = "\033[91m"
         bold = "\033[1m"
         end = "\033[0m"
@@ -174,6 +232,10 @@ def main():
                 print("Not a good night, but who's stopping you! Make sure to bring a Jacket if you go!")
             else:
                 print("Try again another night.")
+        print("")
+        print("Here are some cool visible objects tonight:")
+        print("\033[95m"+ ", ".join(map(str,visible_list))+"\033[0m")
+        print("")
     except Exception as error:
         print(f"There was an error: {error}")
         
