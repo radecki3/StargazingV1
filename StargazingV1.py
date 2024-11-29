@@ -1,9 +1,11 @@
 import requests
 import datetime
 import ephem
+import time
 import skyfield.almanac as almanac
 from geopy.geocoders import Nominatim
 from skyfield.api import load
+from rich.progress import track
 
 #Convert User Input Location to longitude, latitude
 def convert_location(loc):
@@ -94,9 +96,25 @@ def get_moon_phase():
     #for me, if it's a new moon that's great, crescent is stil okay, gibbous is pretty bad, full moon is very bad
     return moon_phase, moon_phase_rating, illumination
 
-#Combine
-def calculate_rating():
-    return
+#Calculate a score for the night out of 10 based on various factors, this is kind of arbitrary
+def calculate_rating(illum, temp, weather_rating):
+    dummy_rating = 0
+    dummy_rating += 0.5 if temp >=50 else 0.5 if temp >=40 else 0
+    dummy_rating += 6 if weather_rating == "good" else 0
+    if illum <= 2:
+        dummy_rating +=3
+    elif 2 < illum <= 10:
+        dummy_rating +=2.5
+    elif 10 < illum <= 30:
+        dummy_rating +=2
+    elif 30 < illum <= 50:
+        dummy_rating +=1.5
+    elif 50 < illum <= 70:
+        dummy_rating +=1.0
+    rating = dummy_rating
+    rating_text = "bad"
+    rating_text = "great" if rating >=9 else "pretty good" if 7< rating <10 else "pretty bad" if 4< rating <7 else "bad"
+    return rating, rating_text
 
 #user input
 welcome_message = """
@@ -111,6 +129,8 @@ def main():
         latitude, longitude = convert_location(location)
         forecast, weather_rating, night_temp = get_weather(latitude,longitude)
         moon_phase, moon_phase_rating, illumination = get_moon_phase()
+        overall_rating_number,overall_rating_text = calculate_rating(illumination,night_temp,weather_rating)
+        #pretty text styling
         if weather_rating == "good":
             weather_color = "\033[92m" #green
         else:
@@ -121,18 +141,39 @@ def main():
             moon_color = "\033[92m" 
         else:
             moon_color = "\033[91m"
+        if overall_rating_text == ("Great") or ("Pretty Good"):
+            overall_color = "\033[92m"
+        else:
+            overall_color = "\033[91m"
         bold = "\033[1m"
         end = "\033[0m"
-        overall_rating = 'good'
+        #this is a fake progress bar for asthetic purposes right now, hopefully can implement a real one in the future
+        for i in track(range(10),description = "Working..."):
+            time.sleep(0.3)
+        print("")
+        print(f"Stagazing Quality for \033[94m{location}{end}")
         print(f"{bold}Weather Rating: {end} {weather_color}{weather_rating.upper()}{end} (Forecast: {forecast}, Temp: {night_temp} F)")
         print(f"{bold}Moon Rating: {end} {moon_color}{moon_phase_rating.upper()}{end} (Phase: {moon_phase}, {illumination:.2f}% Illuminated)")
-        print(f"{bold}Overall Rating: {end}{overall_rating.upper()}")
-        if (night_temp >=50) & (overall_rating == "good"): 
-            print("Tonight's a great night to stargaze!")
-        elif (night_temp <50) & (overall_rating == "good"):
-            print("Tonight's a great night to stargaze! Make sure to bring a Jacket!")
+        print(f"{bold}Overall Rating: {end}{overall_color}{overall_rating_text.upper()}{end} (Rating: {overall_rating_number}/10)")
+        print("")
+        if night_temp >=50:
+            if overall_rating_text == "great": 
+                print("Tonight's a GREAT night to stargaze!")
+            elif overall_rating_text == "pretty good":
+                print("It might not be perfect but go for it!")
+            elif overall_rating_text == "pretty bad":
+                print("Not a good night, but who's stopping you!")
+            else:
+                print("Try again another night.")
         else:
-            print("Try again tomorrow!")
+            if (overall_rating_text == "great"):
+                print("Tonight's a GREAT night to stargaze! Make sure to bring a Jacket!")
+            elif overall_rating_text == "pretty good":
+                print("It might not be perfect but go for it! Make sure to bring a Jacket!")
+            elif overall_rating_text == "pretty bad":
+                print("Not a good night, but who's stopping you! Make sure to bring a Jacket if you go!")
+            else:
+                print("Try again another night.")
     except Exception as error:
         print(f"There was an error: {error}")
         
