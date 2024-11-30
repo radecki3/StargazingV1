@@ -186,7 +186,7 @@ def main():
         forecast, weather_rating, night_temp = get_weather(latitude,longitude)
         moon_phase, moon_phase_rating, illumination = get_moon_phase()
         overall_rating_number, overall_rating_text = calculate_rating(illumination,night_temp,weather_rating)
-        visible_list = visible_objects(latitude,longitude)
+        visible_star_list = visible_objects(latitude,longitude)
         #pretty text styling
         if weather_rating == "good":
             weather_color = "\033[92m" #green
@@ -198,18 +198,17 @@ def main():
             moon_color = "\033[92m" 
         else:
             moon_color = "\033[91m"
-        if overall_rating_text == ("great") or ("pretty good"):
+        if overall_rating_text == ("great") or overall_rating_text == ("pretty good"):
             overall_color = "\033[92m"
-        #some weird stuff going on here, will have to fix.
-        if overall_rating_text == ("bad") or ("pretty bad"):
+        elif overall_rating_text == ("bad") or overall_rating_text == ("pretty bad"):
             overall_color = "\033[91m"
-        bold = "\033[1m"
+        bold = "\033[1m"   
         end = "\033[0m"
         #this is a fake progress bar for asthetic purposes right now, hopefully can implement a real one in the future
         for i in track(range(10),description = "Working..."):
             time.sleep(0.3)
         print("")
-        print(f"Stagazing Quality for \033[94m{location}{end}")
+        print(f"Stagazing Quality for \033[94m{location}{end} tonight")
         print(f"{bold}Weather Rating: {end} {weather_color}{weather_rating.upper()}{end} (Forecast: {forecast}, Temp: {night_temp} F)")
         print(f"{bold}Moon Rating: {end} {moon_color}{moon_phase_rating.upper()}{end} (Phase: {moon_phase}, {illumination:.2f}% Illuminated)")
         print(f"{bold}Overall Rating: {end}{overall_color}{overall_rating_text.upper()}{end} (Rating: {overall_rating_number}/10)")
@@ -233,8 +232,8 @@ def main():
             else:
                 print("Try again another night.")
         print("")
-        print("Here are some cool visible objects tonight:")
-        print("\033[95m"+ ", ".join(map(str,visible_list))+"\033[0m")
+        print("Here are some cool visible stars tonight:")
+        print("\033[95m"+ ", ".join(map(str,visible_star_list))+"\033[0m")
         print("")
     except Exception as error:
         print(f"There was an error: {error}")
