@@ -162,7 +162,9 @@ def visible_objects(lat,long):
     for row in stars_names.iterrows():
         altitude_start = row[1][5]
         altitude_end = row[1][6]
-        if (altitude_start > 0) | (altitude_end > 0):
+        #technically, altitude >0 means it will be above the horizon but really it's hard to see anything below an altitude
+        #of ~5 deg or something because there will be stuff in the way. 
+        if (altitude_start > 5) | (altitude_end > 5):
             visibilities.append('visible')
         else:
             visibilities.append('not visible')
