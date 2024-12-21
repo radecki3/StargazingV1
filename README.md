@@ -3,7 +3,7 @@
 A few packages are used that are required for functionality. Make sure to install them:
 
 ```
-pip install astropy pandas skyfield geopy time ephem datetime requests warnings
+pip install astropy pandas skyfield geopy ephem datetime requests warnings
 ```
 **Purpose**
 
