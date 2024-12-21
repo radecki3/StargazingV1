@@ -8,7 +8,7 @@ import pandas as pd
 from skyfield.data import hipparcos
 from geopy.geocoders import Nominatim
 from skyfield.api import load
-from rich.progress import track
+from rich.progress import Progress
 from astropy.coordinates import AltAz
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.time import Time
@@ -184,59 +184,79 @@ Input a Location:
 def main():
     location = input(welcome_message)
     try:
-        latitude, longitude = convert_location(location)
-        forecast, weather_rating, night_temp = get_weather(latitude,longitude)
-        moon_phase, moon_phase_rating, illumination = get_moon_phase()
-        overall_rating_number, overall_rating_text = calculate_rating(illumination,night_temp,weather_rating)
-        visible_star_list = visible_objects(latitude,longitude)
-        #pretty text styling
-        if weather_rating == "good":
-            weather_color = "\033[92m" #green
-        else:
-            weather_color = "\033[91m" #red
-        if moon_phase_rating == "Great":
-            moon_color = "\033[92m" 
-        elif moon_phase_rating == "Pretty Good":
-            moon_color = "\033[92m" 
-        else:
-            moon_color = "\033[91m"
-        if overall_rating_text == ("great") or overall_rating_text == ("pretty good"):
-            overall_color = "\033[92m"
-        elif overall_rating_text == ("bad") or overall_rating_text == ("pretty bad"):
-            overall_color = "\033[91m"
-        bold = "\033[1m"   
-        end = "\033[0m"
-        #this is a fake progress bar for asthetic purposes right now, hopefully can implement a real one in the future
-        for i in track(range(10),description = "Working..."):
-            time.sleep(0.3)
-        print("")
-        print(f"Stagazing Quality for \033[94m{location}{end} tonight")
-        print(f"{bold}Weather Rating: {end} {weather_color}{weather_rating.upper()}{end} (Forecast: {forecast}, Temp: {night_temp} F)")
-        print(f"{bold}Moon Rating: {end} {moon_color}{moon_phase_rating.upper()}{end} (Phase: {moon_phase}, {illumination:.2f}% Illuminated)")
-        print(f"{bold}Overall Rating: {end}{overall_color}{overall_rating_text.upper()}{end} (Rating: {overall_rating_number}/10)")
-        print("")
-        if night_temp >=50:
-            if overall_rating_text == "great": 
-                print("Tonight's a GREAT night to stargaze!")
-            elif overall_rating_text == "pretty good":
-                print("It might not be perfect but go for it!")
-            elif overall_rating_text == "pretty bad":
-                print("Not a good night, but who's stopping you!")
+        #progres bar
+        with Progress(transient=True) as progress:
+
+            #separate stuff into tasks
+            progress_bar = progress.add_task("[White]Calculating...", total=10)
+
+            #call the functions
+            latitude, longitude = convert_location(location)
+            progress.update(progress_bar,advance=2)
+
+            forecast, weather_rating, night_temp = get_weather(latitude,longitude)
+            progress.update(progress_bar,advance=2)
+
+            moon_phase, moon_phase_rating, illumination = get_moon_phase()
+            progress.update(progress_bar,advance=2)
+
+            visible_star_list = visible_objects(latitude,longitude)
+            progress.update(progress_bar,advance=2)
+
+            overall_rating_number, overall_rating_text = calculate_rating(illumination,night_temp,weather_rating)
+            progress.update(progress_bar,advance=2)
+
+            #pretty text styling
+            if weather_rating == "good":
+                weather_color = "\033[92m" #green
             else:
-                print("Try again another night.")
-        else:
-            if (overall_rating_text == "great"):
-                print("Tonight's a GREAT night to stargaze! Make sure to bring a Jacket!")
-            elif overall_rating_text == "pretty good":
-                print("It might not be perfect but go for it! Make sure to bring a Jacket!")
-            elif overall_rating_text == "pretty bad":
-                print("Not a good night, but who's stopping you! Make sure to bring a Jacket if you go!")
+                weather_color = "\033[91m" #red
+            if moon_phase_rating == "Great":
+                moon_color = "\033[92m" 
+            elif moon_phase_rating == "Pretty Good":
+                moon_color = "\033[92m" 
             else:
-                print("Try again another night.")
-        print("")
-        print("Here are some cool visible stars tonight:")
-        print("\033[95m"+ ", ".join(map(str,visible_star_list))+"\033[0m")
-        print("")
+                moon_color = "\033[91m"
+            if overall_rating_text == ("great") or overall_rating_text == ("pretty good"):
+                overall_color = "\033[92m"
+            elif overall_rating_text == ("bad") or overall_rating_text == ("pretty bad"):
+                overall_color = "\033[91m"
+            bold = "\033[1m"   
+            end = "\033[0m"
+
+            #a bunch of print statements
+            print("")
+            print("----------------------------------------------------------------")
+            print(f"Stagazing Quality for \033[94m{location}{end} tonight:")
+            print(f"{bold}Weather Rating: {end} {weather_color}{weather_rating.upper()}{end} (Forecast: {forecast}, Temp: {night_temp} F)")
+            print(f"{bold}Moon Rating: {end} {moon_color}{moon_phase_rating.upper()}{end} (Phase: {moon_phase}, {illumination:.2f}% Illuminated)")
+            print(f"{bold}Overall Rating: {end}{overall_color}{overall_rating_text.upper()}{end} (Rating: {overall_rating_number}/10)")
+            print("")
+
+            if night_temp >=50:
+                if overall_rating_text == "great": 
+                    print("Tonight's a GREAT night to stargaze!")
+                elif overall_rating_text == "pretty good":
+                    print("It might not be perfect but go for it!")
+                elif overall_rating_text == "pretty bad":
+                    print("Not a good night, but who's stopping you!")
+                else:
+                    print("Try again another night.")
+            else:
+                if (overall_rating_text == "great"):
+                    print("Tonight's a GREAT night to stargaze! Make sure to bring a Jacket!")
+                elif overall_rating_text == "pretty good":
+                    print("It might not be perfect but go for it! Make sure to bring a Jacket!")
+                elif overall_rating_text == "pretty bad":
+                    print("Not a good night, but who's stopping you! Make sure to bring a Jacket if you go!")
+                else:
+                    print("Try again another night.")
+            print("")
+            print("Here are some cool visible stars tonight:")
+            print("\033[95m"+ ", ".join(map(str,visible_star_list))+"\033[0m")
+            print("----------------------------------------------------------------")
+            print("")
+            
     except Exception as error:
         print(f"There was an error: {error}")
         
