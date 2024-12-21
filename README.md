@@ -1,10 +1,17 @@
-**PURPOSE**
+**Required Packages**
+
+A few packages are used that are required for functionality. Make sure to install them:
+
+```
+pip install astropy pandas skyfield geopy time ephem datetime requests warnings
+```
+**Purpose**
 
 There are currently not many accessible and/or adequate online tools for determining the potential quality of stargazing on a given night in a given location. 
 
 As someone who likes to stargaze, I wanted to create some easy-to-use tools for myself, and potentially others, to be able to quickly determine stargazing potential for a given night.
 
-**METHODS**
+**Methods**
 
 Here, I use Python to return a rating, as well as some supplemental information, regarding stargazing potential on a given night given a particular location in the United States. 
 
@@ -16,7 +23,7 @@ StargazingV1 is relatively basic. I only look at 12 hour increments for weather,
 
 In future versions, I hope to return a more comprehensive evaluation of stargazing quality, perhaps using some weather models.
 
-**FURTHER DETAILS**
+**Further Details**
 
 To me, the most important factors are:
   1. How dark is the sky?
