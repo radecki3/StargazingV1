@@ -2,7 +2,6 @@ import warnings
 import requests
 import datetime
 import ephem
-import time
 import skyfield.almanac as almanac
 import pandas as pd
 from skyfield.data import hipparcos
