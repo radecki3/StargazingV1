@@ -4,6 +4,7 @@ import datetime
 import ephem
 import skyfield.almanac as almanac
 import pandas as pd
+import math
 from skyfield.data import hipparcos
 from geopy.geocoders import Nominatim
 from skyfield.api import load
@@ -173,10 +174,29 @@ def visible_objects(lat,long):
     bright_visible_objects = final_star_catalog.head(5)['name'].tolist() #only need a few  
     return bright_visible_objects
 
+def haversine_distance(lat1,long1,lat2,long2):
+#finds distance between two lat,long coordinates
+#adapted from stackoverflow post https://stackoverflow.com/questions/4913349/haversine-formula-in-python-bearing-and-distance-between-two-gps-points
+    #convert demical to radians
+    lat1, long1, lat2, long2 = map(math.radians,[lat1,long1,lat2,long2])
+    delta_lat = lat2 - lat1
+    delta_long = long2 - long1
+    #apply the formula
+    r = 3956 #miles = radius of earth
+    dist = 2 * r * (math.asin(((math.sin(delta_lat/2)**2) + math.cos(lat1) * math.cos(lat2) * (math.sin(delta_long/2)**2))**(1/2)))
+    return dist
+
+def shortest_distance(lat,long,points):
+#finds the shortest distance using the haversine distance
+    distances = []
+    for point in points:
+        distances.append((haversine_distance(lat,long,point['lat'],point['long']),point))
+    shortest_dist, closest_point = min(distances,key = lambda x: x[0])
+    return shortest_dist, closest_point["Name"]
+
 #user input
 welcome_message = """
-Welcome to StargazingV1! 
-Let's see if you can stargaze tonight!
+Welcome to StargazingV1! Let's see if you can stargaze tonight!
 Input a Location:
 """
 #Execute
@@ -187,7 +207,7 @@ def main():
         with Progress(transient=True) as progress:
 
             #separate stuff into tasks
-            progress_bar = progress.add_task("[White]Calculating...", total=10)
+            progress_bar = progress.add_task("[white]Calculating...", total=12)
 
             #call the functions
             latitude, longitude = convert_location(location)
@@ -203,6 +223,12 @@ def main():
             progress.update(progress_bar,advance=2)
 
             overall_rating_number, overall_rating_text = calculate_rating(illumination,night_temp,weather_rating)
+            progress.update(progress_bar,advance=2)
+
+            #dark sky
+            dark_sky_sites = pd.read_csv('dark_sites_us.csv', usecols=['Name','lat','long'])
+            dark_sky_sites_dict = dark_sky_sites.to_dict(orient='records')
+            shortest_dist, closest_site = shortest_distance(latitude,longitude,dark_sky_sites_dict)
             progress.update(progress_bar,advance=2)
 
             #pretty text styling
@@ -222,6 +248,7 @@ def main():
                 overall_color = "\033[91m"
             bold = "\033[1m"   
             end = "\033[0m"
+            underline = "\033[4m"
 
             #a bunch of print statements
             print("")
@@ -243,19 +270,23 @@ def main():
                     print("Try again another night.")
             else:
                 if (overall_rating_text == "great"):
-                    print("Tonight's a GREAT night to stargaze! Make sure to bring a Jacket!")
+                    print(f"{underline}Tonight's a GREAT night to stargaze! Make sure to bring a Jacket!{end}")
                 elif overall_rating_text == "pretty good":
-                    print("It might not be perfect but go for it! Make sure to bring a Jacket!")
+                    print(f"{underline}It might not be perfect but go for it! Make sure to bring a Jacket!{end}")
                 elif overall_rating_text == "pretty bad":
-                    print("Not a good night, but who's stopping you! Make sure to bring a Jacket if you go!")
+                    print(f"{underline}Not a good night, but who's stopping you! Make sure to bring a Jacket if you go!{end}")
                 else:
-                    print("Try again another night.")
+                    print(f"{underline}Try again another night.{end}")
+            print("----------------------------------------------------------------")
+            print("Some Extra Fun Info:")
+            print("")
+            print("The closest dark site to you:")
+            print(f"{'\033[96m'}{closest_site} ({shortest_dist:.1f} mi away){end}")
             print("")
             print("Here are some cool visible stars tonight:")
             print("\033[95m"+ ", ".join(map(str,visible_star_list))+"\033[0m")
             print("----------------------------------------------------------------")
             print("")
-            
     except Exception as error:
         print(f"There was an error: {error}")
         
