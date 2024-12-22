@@ -21,7 +21,9 @@ As someone who likes to stargaze, I wanted to create some easy-to-use tools for 
 
 **Methods**
 
-Here, I use Python to return a rating, as well as some supplemental information, regarding stargazing potential on a given night given a particular location in the United States. 
+Here, I use Python to return ratings regarding stargazing potential on a given night given a particular location in the United States.
+
+I also return a significant amount of supplmental info such as temperature, nearest dark sites, visible stars and planets, and more.
 
 I also use location calculations, NWS public weather data, and moon cycle calculations to accomplish this.
 
