@@ -120,7 +120,7 @@ def calculate_rating(illum, temp, weather_rating):
     elif 50 < illum <= 70:
         dummy_rating +=1.0
     rating = dummy_rating
-    rating_text = "great" if rating >=9 else "pretty good" if 7< rating <10 else "pretty bad" if 4< rating <7 else "bad"
+    rating_text = "great" if rating >=9 else "pretty good" if 7<= rating <9 else "pretty bad" if 4<= rating <7 else "bad"
     return rating, rating_text
 
 #Find Cool Objects
@@ -163,7 +163,7 @@ def visible_stars(lat,long):
         altitude_start = row[1][5]
         altitude_end = row[1][6]
         #technically, altitude >0 means it will be above the horizon but really it's hard to see anything below an altitude
-        #of ~5 deg or something because there will be stuff in the way. 
+        #of ~10 deg or something because there will be stuff in the way. 
         if (altitude_start > 15) | (altitude_end > 15):
             visibilities.append('visible')
         else:
@@ -311,7 +311,7 @@ def main():
             print("----------------------------------------------------------------")
             print("Some Extra Info:")
             print("")
-            print("The closest dark site to you:")
+            print(f"The closest official {underline}dark site{end} to you:")
             print(f"{'\033[96m'}{closest_site} ({shortest_dist:.1f} mi away){end}")
             print("")
             print(f"Here are some cool visible {underline}stars{end} tonight:")
