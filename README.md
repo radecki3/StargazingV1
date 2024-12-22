@@ -14,6 +14,7 @@ python -m pip install math
 python -m pip install rich
 ```
 **Run The Script**
+
 Download all the files from this repo (Code --> Download ZIP) and keep in one folder. StargazingV1.py is the main script to be run.
 
 ```
