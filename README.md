@@ -10,6 +10,8 @@ python -m pip install geopy
 python -m pip install ephem
 python -m pip install datetime
 python -m pip install requests
+python -m pip install math
+python -m pip install rich
 ```
 **Purpose**
 
