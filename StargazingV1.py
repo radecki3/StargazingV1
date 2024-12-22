@@ -125,7 +125,7 @@ def calculate_rating(illum, temp, weather_rating):
 
 #Find Cool Objects
 #use the hipparcos dataset
-def visible_objects(lat,long):
+def visible_stars(lat,long):
     with load.open(hipparcos.URL) as f:
         df = hipparcos.load_dataframe(f)
     brightest_stars = df[df.magnitude < 1.0].sort_values('magnitude').reset_index() #magniutdes are in reverse order of brightness
@@ -164,7 +164,7 @@ def visible_objects(lat,long):
         altitude_end = row[1][6]
         #technically, altitude >0 means it will be above the horizon but really it's hard to see anything below an altitude
         #of ~5 deg or something because there will be stuff in the way. 
-        if (altitude_start > 5) | (altitude_end > 5):
+        if (altitude_start > 15) | (altitude_end > 15):
             visibilities.append('visible')
         else:
             visibilities.append('not visible')
@@ -174,6 +174,33 @@ def visible_objects(lat,long):
     bright_visible_objects = final_star_catalog.head(5)['name'].tolist() #only need a few  
     return bright_visible_objects
 
+def visible_planets(lat,long):
+    #set up observer stuff
+    observer = ephem.Observer()
+    observer.lat=str(lat)
+    observer.lon=str(long)
+    #get date
+    date_today = datetime.datetime.now()
+    observer.date = date_today
+    night_time_start = date_today.replace(hour=18,minute=0,second=0,microsecond=0)
+    night_time_end = night_time_start + datetime.timedelta(hours=12)
+    #planet altitudes
+    planets = [ephem.Mercury(),ephem.Venus(),ephem.Mars(),ephem.Jupiter(),ephem.Saturn(),ephem.Uranus(),ephem.Neptune()]
+    visible_planets = []
+    current_time = night_time_start
+    #loop over time range, check every hour
+    while current_time < night_time_end:
+        observer.date = current_time
+        for planet in planets:
+            planet.compute(observer)
+            alt_deg = planet.alt * (180/ephem.pi) #convert to deg
+            #I use a sort of arbitrary cutoff of 5 deg altitude because something at say
+            #5 deg is going to be very hard to see
+            if (alt_deg>15) & (planet.name not in visible_planets):
+                visible_planets.append(planet.name)
+        current_time += datetime.timedelta(hours=1)
+    return visible_planets
+
 def haversine_distance(lat1,long1,lat2,long2):
 #finds distance between two lat,long coordinates
 #adapted from stackoverflow post https://stackoverflow.com/questions/4913349/haversine-formula-in-python-bearing-and-distance-between-two-gps-points
@@ -182,7 +209,7 @@ def haversine_distance(lat1,long1,lat2,long2):
     delta_lat = lat2 - lat1
     delta_long = long2 - long1
     #apply the formula
-    r = 3956 #miles = radius of earth
+    r = 3963 #miles = radius of earth
     dist = 2 * r * (math.asin(((math.sin(delta_lat/2)**2) + math.cos(lat1) * math.cos(lat2) * (math.sin(delta_long/2)**2))**(1/2)))
     return dist
 
@@ -219,7 +246,8 @@ def main():
             moon_phase, moon_phase_rating, illumination = get_moon_phase()
             progress.update(progress_bar,advance=2)
 
-            visible_star_list = visible_objects(latitude,longitude)
+            visible_star_list = visible_stars(latitude,longitude)
+            visible_planet_list = visible_planets(latitude,longitude)
             progress.update(progress_bar,advance=2)
 
             overall_rating_number, overall_rating_text = calculate_rating(illumination,night_temp,weather_rating)
@@ -232,23 +260,26 @@ def main():
             progress.update(progress_bar,advance=2)
 
             #pretty text styling
-            if weather_rating == "good":
-                weather_color = "\033[92m" #green
-            else:
-                weather_color = "\033[91m" #red
-            if moon_phase_rating == "Great":
-                moon_color = "\033[92m" 
-            elif moon_phase_rating == "Pretty Good":
-                moon_color = "\033[92m" 
-            else:
-                moon_color = "\033[91m"
-            if overall_rating_text == ("great") or overall_rating_text == ("pretty good"):
-                overall_color = "\033[92m"
-            elif overall_rating_text == ("bad") or overall_rating_text == ("pretty bad"):
-                overall_color = "\033[91m"
             bold = "\033[1m"   
             end = "\033[0m"
             underline = "\033[4m"
+            green = "\033[92m"
+            red = "\033[91m"
+
+            if weather_rating == "good":
+                weather_color = green 
+            else:
+                weather_color = red
+            if moon_phase_rating == "Great":
+                moon_color = green
+            elif moon_phase_rating == "Pretty Good":
+                moon_color = green
+            else:
+                moon_color = red
+            if overall_rating_text == ("great") or overall_rating_text == ("pretty good"):
+                overall_color = green
+            elif overall_rating_text == ("bad") or overall_rating_text == ("pretty bad"):
+                overall_color = red
 
             #a bunch of print statements
             print("")
@@ -278,13 +309,16 @@ def main():
                 else:
                     print(f"{underline}Try again another night.{end}")
             print("----------------------------------------------------------------")
-            print("Some Extra Fun Info:")
+            print("Some Extra Info:")
             print("")
             print("The closest dark site to you:")
             print(f"{'\033[96m'}{closest_site} ({shortest_dist:.1f} mi away){end}")
             print("")
-            print("Here are some cool visible stars tonight:")
+            print(f"Here are some cool visible {underline}stars{end} tonight:")
             print("\033[95m"+ ", ".join(map(str,visible_star_list))+"\033[0m")
+            if len(visible_planet_list) > 0:
+                print(f"Here are the visible {underline}planets{end} tonight:")
+            print("\033[95m"+ ", ".join(map(str,visible_planet_list))+"\033[0m")
             print("----------------------------------------------------------------")
             print("")
     except Exception as error:
