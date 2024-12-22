@@ -13,6 +13,13 @@ python -m pip install requests
 python -m pip install math
 python -m pip install rich
 ```
+**Run The Script**
+Download all the files from this repo (Code --> Download ZIP) and keep in one folder. StargazingV1.py is the main script to be run.
+
+```
+python StargazingV1.py
+```
+
 **Purpose**
 
 There are currently not many accessible and/or adequate online tools for determining the potential quality of stargazing on a given night in a given location. 
