@@ -5,6 +5,7 @@ import ephem
 import skyfield.almanac as almanac
 import pandas as pd
 import math
+import folium
 from skyfield.data import hipparcos
 from geopy.geocoders import Nominatim
 from skyfield.api import load
@@ -91,7 +92,7 @@ def get_moon_phase():
         phase_deg = (almanac.moon_phase(eph,current_time)).degrees #returns in deg
         if (0 <= phase_deg <= 90):
             moon_phase = "Waxing Crescent"
-            moon_phase_rating = "Pretty Good"
+            moon_phase_rating = "OK"
         if (90 <= phase_deg <=180):
             moon_phase = "Waxing Gibbous"
             moon_phase_rating = "Not Good"
@@ -100,7 +101,7 @@ def get_moon_phase():
             moon_phase_rating = "Not Good"
         if (270 <= phase_deg <= 360):
             moon_phase = "Waning Crescent"
-            moon_phase_rating = "Pretty Good"
+            moon_phase_rating = "OK"
     #for me, if it's a new moon that's great, crescent is stil okay, gibbous is pretty bad, full moon is very bad
     return moon_phase, moon_phase_rating, illumination
 
@@ -272,7 +273,7 @@ def main():
                 weather_color = red
             if moon_phase_rating == "Great":
                 moon_color = green
-            elif moon_phase_rating == "Pretty Good":
+            elif moon_phase_rating == "OK":
                 moon_color = green
             else:
                 moon_color = red
