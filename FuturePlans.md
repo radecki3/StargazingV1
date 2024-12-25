@@ -2,4 +2,5 @@
   1. More accurate weather stuff
   2. Accurate sunset/sunrise
   3. Return visible nebulae/galaxies/etc
-  5. Next best day to observe
+  4. Next best day to observe
+  5. Interactive GUI or better interface
