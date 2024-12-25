@@ -280,6 +280,7 @@ def light_pollution(lat,long,location,lat2,long2,location2,dist,zoom=12):
 #user input
 welcome_message = """
 Welcome to StargazingV1! Let's see if you can stargaze tonight!
+(MAKE SURE TO CHECK TERMINAL OUTPUT FOR ALL INFO AFTER RUNNING)
 Input a Location:
 """
 #Execute
