@@ -1,6 +1,6 @@
 **Required Packages**
 
-A few packages are used that are required for functionality. Make sure to install them:
+A few packages are used that are required for functionality. You can either install them yourself as below or the script will do it for you.
 
 ```
 python -m pip install astropy
@@ -10,12 +10,14 @@ python -m pip install geopy
 python -m pip install ephem
 python -m pip install datetime
 python -m pip install requests
+python -m pip install warnings
 python -m pip install math
 python -m pip install rich
+python -m pip install matplotlib
 ```
 **Run The Script**
 
-Download all the files from this repo (Code --> Download ZIP) and keep in one folder. StargazingV1.py is the main script to be run.
+Download all the files from this repo (Code --> Download ZIP) and keep in one folder. StargazingV1.py is the only thing you need to run.
 
 ```
 python StargazingV1.py
@@ -31,7 +33,7 @@ As someone who likes to stargaze, I wanted to create some easy-to-use tools for 
 
 Here, I use Python to return ratings regarding stargazing potential on a given night given a particular location in the United States.
 
-I also return a significant amount of supplmental info such as temperature, nearest dark sites, visible stars and planets, and more.
+I also return a significant amount of supplmental info such as weather forecast, nearest dark sites, visible stars and planets, and more.
 
 I also use location calculations, NWS public weather data, and moon cycle calculations to accomplish this.
 
