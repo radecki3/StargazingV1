@@ -5,7 +5,8 @@ import ephem
 import skyfield.almanac as almanac
 import pandas as pd
 import math
-import folium
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 from skyfield.data import hipparcos
 from geopy.geocoders import Nominatim
 from skyfield.api import load
@@ -107,7 +108,7 @@ def get_moon_phase():
 
 #Calculate a score for the night out of 10 based on various factors, this is kind of arbitrary
 def calculate_rating(illum, temp, weather_rating):
-    dummy_rating = 0
+    dummy_rating = 10
     dummy_rating += 0.5 if temp >=50 else 0.5 if temp >=40 else 0
     dummy_rating += 6 if weather_rating == "good" else 0
     if illum <= 2:
@@ -222,6 +223,32 @@ def shortest_distance(lat,long,points):
     shortest_dist, closest_point = min(distances,key = lambda x: x[0])
     return shortest_dist, closest_point["Name"]
 
+def light_pollution(lat,long, location):
+    warnings.simplefilter(action='ignore')
+    image_path = "BlackMarble_2016_3km.jpg"
+    light_map = mpimg.imread(image_path)
+
+    map_extent = [-180,180,-90,90] #[min_lon,max_lon,min_lat,max_lat]
+
+    markers = {
+        (long,lat,location) 
+    }
+    #gneral map settings
+    plt.figure(figsize=(12,6))
+    plt.imshow(light_map, extent=map_extent, aspect='auto')
+    plt.xlabel("Longitude")
+    plt.ylabel("Latitude")
+    plt.xlim([-135,-55])  #Contintental US only
+    plt.ylim([25,60])
+    plt.axis('off')
+    plt.subplots_adjust(left=0,right=1,top=1,bottom=0)
+    #plot markets on map
+    for lon, lat, label in markers:
+        plt.plot(lon, lat, 'ro', markersize=8) 
+        plt.text(lon + 1, lat, label, fontsize=12, color='white', bbox=dict(facecolor='black', alpha=0.7, boxstyle='round'))
+    plt.show(block=True)
+    return
+
 #user input
 welcome_message = """
 Welcome to StargazingV1! Let's see if you can stargaze tonight!
@@ -235,7 +262,7 @@ def main():
         with Progress(transient=True) as progress:
 
             #separate stuff into tasks
-            progress_bar = progress.add_task("[white]Calculating...", total=12)
+            progress_bar = progress.add_task("[white]Calculating...", total=14)
 
             #call the functions
             latitude, longitude = convert_location(location)
@@ -322,6 +349,9 @@ def main():
             print("\033[95m"+ ", ".join(map(str,visible_planet_list))+"\033[0m")
             print("----------------------------------------------------------------")
             print("")
+            progress.update(progress_bar,advance=2)
+            light_pollution(latitude,longitude,location) #show light map
+
     except Exception as error:
         print(f"There was an error: {error}")
         
