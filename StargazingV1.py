@@ -284,104 +284,111 @@ Input a Location:
 """
 #Execute
 def main():
-    location = input(welcome_message)
-    try:
-        #progres bar
-        with Progress(transient=True) as progress:
+    while True:
+        location = input(welcome_message)
+        try:
+            #progres bar
+            with Progress(transient=True) as progress:
 
-            #separate stuff into tasks
-            progress_bar = progress.add_task("[white]Calculating...", total=14)
+                #separate stuff into tasks
+                progress_bar = progress.add_task("[white]Calculating...", total=14)
 
-            #call the functions
-            latitude, longitude = convert_location(location)
-            progress.update(progress_bar,advance=2)
+                #call the functions
+                latitude, longitude = convert_location(location)
+                progress.update(progress_bar,advance=2)
 
-            forecast, weather_rating, night_temp = get_weather(latitude,longitude)
-            progress.update(progress_bar,advance=2)
+                forecast, weather_rating, night_temp = get_weather(latitude,longitude)
+                progress.update(progress_bar,advance=2)
 
-            moon_phase, moon_phase_rating, illumination = get_moon_phase()
-            progress.update(progress_bar,advance=2)
+                moon_phase, moon_phase_rating, illumination = get_moon_phase()
+                progress.update(progress_bar,advance=2)
 
-            visible_star_list = visible_stars(latitude,longitude)
-            visible_planet_list = visible_planets(latitude,longitude)
-            progress.update(progress_bar,advance=2)
+                visible_star_list = visible_stars(latitude,longitude)
+                visible_planet_list = visible_planets(latitude,longitude)
+                progress.update(progress_bar,advance=2)
 
-            overall_rating_number, overall_rating_text = calculate_rating(illumination,night_temp,weather_rating)
-            progress.update(progress_bar,advance=2)
+                overall_rating_number, overall_rating_text = calculate_rating(illumination,night_temp,weather_rating)
+                progress.update(progress_bar,advance=2)
 
-            #dark sky
-            dark_sky_sites = pd.read_csv('dark_sites_us.csv', usecols=['Name','lat','long'])
-            dark_sky_sites_dict = dark_sky_sites.to_dict(orient='records')
-            shortest_dist, closest_site, dark_site_lat,dark_site_long = shortest_distance(latitude,longitude,dark_sky_sites_dict)
-            progress.update(progress_bar,advance=2)
+                #dark sky
+                dark_sky_sites = pd.read_csv('dark_sites_us.csv', usecols=['Name','lat','long'])
+                dark_sky_sites_dict = dark_sky_sites.to_dict(orient='records')
+                shortest_dist, closest_site, dark_site_lat,dark_site_long = shortest_distance(latitude,longitude,dark_sky_sites_dict)
+                progress.update(progress_bar,advance=2)
 
-            #pretty text styling
-            bold = "\033[1m"   
-            end = "\033[0m"
-            underline = "\033[4m"
-            green = "\033[92m"
-            red = "\033[91m"
+                #pretty text styling
+                bold = "\033[1m"   
+                end = "\033[0m"
+                underline = "\033[4m"
+                green = "\033[92m"
+                red = "\033[91m"
 
-            if weather_rating == "good":
-                weather_color = green 
-            else:
-                weather_color = red
-            if moon_phase_rating == "Great":
-                moon_color = green
-            elif moon_phase_rating == "OK":
-                moon_color = green
-            else:
-                moon_color = red
-            if overall_rating_text == ("great") or overall_rating_text == ("pretty good"):
-                overall_color = green
-            elif overall_rating_text == ("bad") or overall_rating_text == ("pretty bad"):
-                overall_color = red
-
-            #a bunch of print statements
-            print("")
-            print("----------------------------------------------------------------")
-            print(f"Stagazing Quality for \033[94m{location}{end} tonight:")
-            print(f"{bold}Weather Rating: {end} {weather_color}{weather_rating.upper()}{end} (Forecast: {forecast}, Temp: {night_temp} F)")
-            print(f"{bold}Moon Rating: {end} {moon_color}{moon_phase_rating.upper()}{end} (Phase: {moon_phase}, {illumination:.2f}% Illuminated)")
-            print(f"{bold}Overall Rating: {end}{overall_color}{overall_rating_text.upper()}{end} (Rating: {overall_rating_number}/10)")
-            print("")
-
-            if night_temp >=50:
-                if overall_rating_text == "great": 
-                    print("Tonight's a GREAT night to stargaze!")
-                elif overall_rating_text == "pretty good":
-                    print("It might not be perfect but go for it!")
-                elif overall_rating_text == "pretty bad":
-                    print("Not a good night, but who's stopping you!")
+                if weather_rating == "good":
+                    weather_color = green 
                 else:
-                    print("Try again another night.")
-            else:
-                if (overall_rating_text == "great"):
-                    print(f"{underline}Tonight's a GREAT night to stargaze! Make sure to bring a Jacket!{end}")
-                elif overall_rating_text == "pretty good":
-                    print(f"{underline}It might not be perfect but go for it! Make sure to bring a Jacket!{end}")
-                elif overall_rating_text == "pretty bad":
-                    print(f"{underline}Not a good night, but who's stopping you! Make sure to bring a Jacket if you go!{end}")
+                    weather_color = red
+                if moon_phase_rating == "Great":
+                    moon_color = green
+                elif moon_phase_rating == "OK":
+                    moon_color = green
                 else:
-                    print(f"{underline}Try again another night.{end}")
-            print("----------------------------------------------------------------")
-            print("Some Extra Info:")
-            print("")
-            print(f"The closest official {underline}dark site{end} to you:")
-            print(f"{'\033[96m'}{closest_site} ({shortest_dist:.1f} mi away){end}")
-            print("")
-            print(f"Here are some cool visible {underline}stars{end} tonight:")
-            print("\033[95m"+ ", ".join(map(str,visible_star_list))+"\033[0m")
-            if len(visible_planet_list) > 0:
-                print(f"Here are the visible {underline}planets{end} tonight:")
-            print("\033[95m"+ ", ".join(map(str,visible_planet_list))+"\033[0m")
-            print("----------------------------------------------------------------")
-            print("")
-            progress.update(progress_bar,advance=2)
-            light_pollution(latitude,longitude,location,dark_site_lat,dark_site_long,closest_site,shortest_dist) #show light map
+                    moon_color = red
+                if overall_rating_text == ("great") or overall_rating_text == ("pretty good"):
+                    overall_color = green
+                elif overall_rating_text == ("bad") or overall_rating_text == ("pretty bad"):
+                    overall_color = red
 
-    except Exception as error:
-        print(f"There was an error: {error}")
+                #a bunch of print statements
+                print("")
+                print("----------------------------------------------------------------")
+                print(f"Stagazing Quality for \033[94m{location}{end} tonight:")
+                print(f"{bold}Weather Rating: {end} {weather_color}{weather_rating.upper()}{end} (Forecast: {forecast}, Temp: {night_temp} F)")
+                print(f"{bold}Moon Rating: {end} {moon_color}{moon_phase_rating.upper()}{end} (Phase: {moon_phase}, {illumination:.2f}% Illuminated)")
+                print(f"{bold}Overall Rating: {end}{overall_color}{overall_rating_text.upper()}{end} (Rating: {overall_rating_number}/10)")
+                print("")
+
+                if night_temp >=50:
+                    if overall_rating_text == "great": 
+                        print("Tonight's a GREAT night to stargaze!")
+                    elif overall_rating_text == "pretty good":
+                        print("It might not be perfect but go for it!")
+                    elif overall_rating_text == "pretty bad":
+                        print("Not a good night, but who's stopping you!")
+                    else:
+                        print("Try again another night.")
+                else:
+                    if (overall_rating_text == "great"):
+                        print(f"{underline}Tonight's a GREAT night to stargaze! Make sure to bring a Jacket!{end}")
+                    elif overall_rating_text == "pretty good":
+                        print(f"{underline}It might not be perfect but go for it! Make sure to bring a Jacket!{end}")
+                    elif overall_rating_text == "pretty bad":
+                        print(f"{underline}Not a good night, but who's stopping you! Make sure to bring a Jacket if you go!{end}")
+                    else:
+                        print(f"{underline}Try again another night.{end}")
+                print("----------------------------------------------------------------")
+                print("Some Extra Info:")
+                print("")
+                print(f"The closest official {underline}dark site{end} to you:")
+                print(f"{'\033[96m'}{closest_site} ({shortest_dist:.1f} mi away){end}")
+                print("")
+                print(f"Here are some cool visible {underline}stars{end} tonight:")
+                print("\033[95m"+ ", ".join(map(str,visible_star_list))+"\033[0m")
+                if len(visible_planet_list) > 0:
+                    print(f"Here are the visible {underline}planets{end} tonight:")
+                print("\033[95m"+ ", ".join(map(str,visible_planet_list))+"\033[0m")
+                print("----------------------------------------------------------------")
+                print("")
+                progress.update(progress_bar,advance=2)
+                light_pollution(latitude,longitude,location,dark_site_lat,dark_site_long,closest_site,shortest_dist) #show light map
+
+        except Exception as error:
+            print(f"There was an error: {error}")
         
+        #allow for continued input
+        print("")
+        retry = input('Would you like to look at another location? (y/n):').strip().lower()
+        if retry not in ['y']:
+            print('Thank you for using StargazingV1!')
+            break
 if __name__ == "__main__":
     main()
