@@ -1,3 +1,24 @@
+#check if all packages are installed
+import sys
+import subprocess
+
+#required packages
+required_packages = ['warnings','requests','datetime','ephem','skyfield','pandas','math','matplotlib','geopy','rich','astropy']
+
+#install packages if necessary
+def packages_install(required_packages):
+    for package in required_packages:
+        try:
+            __import__(package)
+        except ImportError:
+            print(f"Package {package} is not installed. Installing...")
+            subprocess.check_call([sys.executable,"-m","pip","install",package])
+        else:
+            print(f"Package {package} is already installed.")
+    return
+
+packages_install(required_packages)
+
 import warnings
 import requests
 import datetime
@@ -7,6 +28,7 @@ import pandas as pd
 import math
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+
 from skyfield.data import hipparcos
 from geopy.geocoders import Nominatim
 from skyfield.api import load
@@ -108,7 +130,7 @@ def get_moon_phase():
 
 #Calculate a score for the night out of 10 based on various factors, this is kind of arbitrary
 def calculate_rating(illum, temp, weather_rating):
-    dummy_rating = 10
+    dummy_rating = 0
     dummy_rating += 0.5 if temp >=50 else 0.5 if temp >=40 else 0
     dummy_rating += 6 if weather_rating == "good" else 0
     if illum <= 2:
@@ -221,31 +243,37 @@ def shortest_distance(lat,long,points):
     for point in points:
         distances.append((haversine_distance(lat,long,point['lat'],point['long']),point))
     shortest_dist, closest_point = min(distances,key = lambda x: x[0])
-    return shortest_dist, closest_point["Name"]
+    return shortest_dist, closest_point["Name"], closest_point["lat"],closest_point["long"]
 
-def light_pollution(lat,long, location):
+def light_pollution(lat,long,location,lat2,long2,location2,dist,zoom=12):
+    #night sky map with some markers
     warnings.simplefilter(action='ignore')
     image_path = "BlackMarble_2016_3km.jpg"
     light_map = mpimg.imread(image_path)
 
     map_extent = [-180,180,-90,90] #[min_lon,max_lon,min_lat,max_lat]
-
-    markers = {
-        (long,lat,location) 
-    }
+    location_marker = [(long,lat,location)]
+    dark_site_marker = [(long2,lat2,location2)]
     #gneral map settings
-    plt.figure(figsize=(12,6))
+    plt.figure(figsize=(12,8))
     plt.imshow(light_map, extent=map_extent, aspect='auto')
     plt.xlabel("Longitude")
     plt.ylabel("Latitude")
-    plt.xlim([-135,-55])  #Contintental US only
-    plt.ylim([25,60])
+    #plt.xlim([-135,-55])  #Contintental US only
+    #plt.ylim([25,60])
+    plt.xlim([long-zoom,long+zoom]) #zooms in to give a better look
+    plt.ylim([lat-zoom,lat+zoom])
     plt.axis('off')
     plt.subplots_adjust(left=0,right=1,top=1,bottom=0)
     #plot markets on map
-    for lon, lat, label in markers:
-        plt.plot(lon, lat, 'ro', markersize=8) 
-        plt.text(lon + 1, lat, label, fontsize=12, color='white', bbox=dict(facecolor='black', alpha=0.7, boxstyle='round'))
+    for long, lat, name in location_marker:
+        plt.plot(long, lat, 'ro', markersize=8) 
+        plt.text(long - 2.5, lat + 0.5, name, fontsize=14, color='red',weight='bold', bbox=dict(facecolor='black', alpha=0.7, boxstyle='round'))
+    for long2, lat2, name2 in dark_site_marker:
+        plt.plot(long2, lat2, 'go', markersize=8) 
+        plt.text(long2 + 0.5, lat2 -0.5, name2, fontsize=14, color='green',weight='bold', bbox=dict(facecolor='black', alpha=0.7, boxstyle='round'))
+    plt.text(long - 3.5,lat + 7, "Nearest Dark Site",color='white',weight='bold',fontsize=30)
+    plt.text(long - 1.25,lat + 6, f"{dist:.0f} mi away", color='white',weight ='bold',fontsize=15)
     plt.show(block=True)
     return
 
@@ -284,7 +312,7 @@ def main():
             #dark sky
             dark_sky_sites = pd.read_csv('dark_sites_us.csv', usecols=['Name','lat','long'])
             dark_sky_sites_dict = dark_sky_sites.to_dict(orient='records')
-            shortest_dist, closest_site = shortest_distance(latitude,longitude,dark_sky_sites_dict)
+            shortest_dist, closest_site, dark_site_lat,dark_site_long = shortest_distance(latitude,longitude,dark_sky_sites_dict)
             progress.update(progress_bar,advance=2)
 
             #pretty text styling
@@ -350,7 +378,7 @@ def main():
             print("----------------------------------------------------------------")
             print("")
             progress.update(progress_bar,advance=2)
-            light_pollution(latitude,longitude,location) #show light map
+            light_pollution(latitude,longitude,location,dark_site_lat,dark_site_long,closest_site,shortest_dist) #show light map
 
     except Exception as error:
         print(f"There was an error: {error}")
