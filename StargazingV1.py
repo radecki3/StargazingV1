@@ -35,7 +35,6 @@ from skyfield.api import load
 from rich.progress import Progress
 from astropy.coordinates import AltAz
 from astropy.coordinates import EarthLocation, SkyCoord
-from astropy.time import Time
 
 #Convert User Input Location to longitude, latitude
 def convert_location(loc):
