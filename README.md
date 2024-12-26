@@ -14,6 +14,7 @@ python -m pip install warnings
 python -m pip install math
 python -m pip install rich
 python -m pip install matplotlib
+python -m pip install suntime
 ```
 **Run The Script**
 

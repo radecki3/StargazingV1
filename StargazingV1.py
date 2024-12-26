@@ -3,7 +3,7 @@ import sys
 import subprocess
 
 #required packages
-required_packages = ['warnings','requests','datetime','ephem','skyfield','pandas','math','matplotlib','geopy','rich','astropy']
+required_packages = ['warnings','requests','datetime','ephem','skyfield','pandas','math','matplotlib','geopy','rich','astropy','suntime']
 
 #install packages if necessary
 def packages_install(required_packages):
@@ -28,7 +28,7 @@ import pandas as pd
 import math
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-
+from suntime import Sun
 from skyfield.data import hipparcos
 from geopy.geocoders import Nominatim
 from skyfield.api import load
@@ -147,6 +147,16 @@ def calculate_rating(illum, temp, weather_rating):
     rating_text = "great" if rating >=9 else "pretty good" if 7<= rating <9 else "pretty bad" if 4<= rating <7 else "bad"
     return rating, rating_text
 
+#get accurate sunrise and sunset
+def sunrise_sunset(lat,long):
+    sun = Sun(lat, long)
+    sunrise = sun.get_local_sunrise_time()
+    sunset = sun.get_local_sunset_time()
+    #above doesn't fully work, need to manually get correct time
+    local_sunrise = sunrise - datetime.timedelta(hours=6)
+    local_sunset = sunset + datetime.timedelta(hours=18)
+    return local_sunrise, local_sunset
+
 #Find Cool Objects
 #use the hipparcos dataset
 def visible_stars(lat,long):
@@ -161,10 +171,12 @@ def visible_stars(lat,long):
     #assigns names to brightest stars
     stars_names = pd.merge(brightest_stars,common_names,on="hip",how="inner")
     #get altitude and azimuth
-    date_today = datetime.date.today()
-    date_tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-    night_time_start = Time(f'{date_today} 18:00:00')
-    night_time_end = Time(f'{date_tomorrow} 06:00:00')
+    #date_today = datetime.date.today()
+    #date_tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+    #night_time_start = Time(f'{date_today} 18:00:00')
+    #night_time_end = Time(f'{date_tomorrow} 06:00:00')
+    night_time_end,night_time_start = sunrise_sunset(lat,long)
+    night_time_end += datetime.timedelta(hours=24)
     location = EarthLocation(lat=lat,lon=long)
     altaz_converter_start = AltAz(location=location,obstime=night_time_start)
     altaz_converter_end = AltAz(location=location,obstime=night_time_end)
@@ -204,10 +216,12 @@ def visible_planets(lat,long):
     observer.lat=str(lat)
     observer.lon=str(long)
     #get date
-    date_today = datetime.datetime.now()
-    observer.date = date_today
-    night_time_start = date_today.replace(hour=18,minute=0,second=0,microsecond=0)
-    night_time_end = night_time_start + datetime.timedelta(hours=12)
+    #date_today = datetime.datetime.now()
+    #observer.date = date_today
+    #night_time_start = date_today.replace(hour=18,minute=0,second=0,microsecond=0)
+    #night_time_end = night_time_start + datetime.timedelta(hours=12)
+    night_time_end,night_time_start = sunrise_sunset(lat,long)
+    night_time_end += datetime.timedelta(hours=24)
     #planet altitudes
     planets = [ephem.Mercury(),ephem.Venus(),ephem.Mars(),ephem.Jupiter(),ephem.Saturn(),ephem.Uranus(),ephem.Neptune()]
     visible_planets = []
@@ -252,8 +266,6 @@ def light_pollution(lat,long,location,lat2,long2,location2,dist,zoom=12):
     light_map = mpimg.imread(image_path)
 
     map_extent = [-180,180,-90,90] #[min_lon,max_lon,min_lat,max_lat]
-    location_marker = [(long,lat,location)]
-    dark_site_marker = [(long2,lat2,location2)]
     #gneral map settings
     plt.figure(figsize=(12,8))
     plt.imshow(light_map, extent=map_extent, aspect='auto')
@@ -266,14 +278,15 @@ def light_pollution(lat,long,location,lat2,long2,location2,dist,zoom=12):
     plt.axis('off')
     plt.subplots_adjust(left=0,right=1,top=1,bottom=0)
     #plot markets on map
-    for long, lat, name in location_marker:
-        plt.plot(long, lat, 'ro', markersize=8) 
-        plt.text(long - 2.5, lat + 0.5, name, fontsize=14, color='red',weight='bold', bbox=dict(facecolor='black', alpha=0.7, boxstyle='round'))
-    for long2, lat2, name2 in dark_site_marker:
-        plt.plot(long2, lat2, 'go', markersize=8) 
-        plt.text(long2 + 0.5, lat2 -0.5, name2, fontsize=14, color='green',weight='bold', bbox=dict(facecolor='black', alpha=0.7, boxstyle='round'))
-    plt.text(long - 3.5,lat + 7, "Nearest Dark Site",color='white',weight='bold',fontsize=30)
-    plt.text(long - 1.25,lat + 6, f"{dist:.0f} mi away", color='white',weight ='bold',fontsize=15)
+    plt.plot(long, lat, 'ro', markersize=8) 
+    plt.text(long - 2.5, lat + 0.5, location, fontsize=14, color='red',weight='bold', bbox=dict(facecolor='black', alpha=0.7, boxstyle='round'))
+    plt.plot(long2, lat2, 'go', markersize=8)
+    #handles overlapping text decently well
+    long2_offset = 1 if long2 > long else -1
+    lat2_offset = 1 if lat2 > lat else -1
+    plt.text(long2 + long2_offset, lat2 + lat2_offset, location2, fontsize=14, color='green',weight='bold', bbox=dict(facecolor='black', alpha=0.7, boxstyle='round'))
+    plt.text(long - 3.5,lat + 7, "Nearest Dark Site",color='white',weight='bold',fontsize=32)
+    plt.text(long - 0.75,lat + 6, f"{dist:.0f} mi away", color='white',weight ='bold',fontsize=17)
     plt.show(block=True)
     return
 

@@ -55,6 +55,10 @@ dark_sky_table_us.loc[75,'long'] = -99.27447
 dark_sky_table_us.loc[84,'lat'] = 38.5776
 dark_sky_table_us.loc[84,'long'] = -112.3349
 
+#some locations with duplicate names
+dark_sky_table_us.loc[23,'lat'] = 38.1305
+dark_sky_table_us.loc[23,'long'] = -108.2923
+
 #output the dataframe to csv for later use
 dark_sky_table_us.to_csv('dark_sites_us.csv',index=False)
 

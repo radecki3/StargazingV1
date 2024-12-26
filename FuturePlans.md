@@ -1,5 +1,4 @@
 **Future Plans**:
   1. More accurate weather stuff
-  2. Accurate sunset/sunrise
-  3. Return visible nebulae/galaxies/etc
-  5. Next best day to observe
+  2. Next best day to observe
+  3. Manually implement some of the package functionalities to reduce the amount of package dependency
