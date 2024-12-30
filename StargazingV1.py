@@ -1,6 +1,11 @@
 #check if all packages are installed
 import sys
 import subprocess
+import os
+
+#force default path to be the working directory
+default_path = os.getcwd()
+os.chdir(default_path)
 
 #required packages
 required_packages = ['warnings','requests','datetime','ephem','skyfield','pandas','math','matplotlib','geopy','rich','astropy','suntime']
@@ -382,7 +387,8 @@ def main():
                 print("Some Extra Info:")
                 print("")
                 print(f"The closest official {underline}dark site{end} to you:")
-                print(f"{'\033[96m'}{closest_site} ({shortest_dist:.1f} mi away){end}")
+                #f strings behave weird for older versions of python, had to do this print statement differently
+                print('\033[96m' + str(closest_site) + ' (' + str(round(shortest_dist,2)) +' mi away) \033[0m')
                 print("")
                 print(f"Here are some cool visible {underline}stars{end} tonight:")
                 print("\033[95m"+ ", ".join(map(str,visible_star_list))+"\033[0m")
